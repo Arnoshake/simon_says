@@ -6,6 +6,7 @@ module fsmd (
     input  logic        seq_done,
     input  logic        wrong_input,
     input  logic        turn_done,
+    input  logic        return_to_idle,
     output logic [1:0]  game_state
 );
 
@@ -38,17 +39,13 @@ module fsmd (
             end
 
             S_SHOW_SEQ: begin
-                if (start_game_pulse) begin
-                    next_state = S_SHOW_SEQ; // Restart mid-round if desired
-                end else if (seq_done) begin
+                if (seq_done) begin
                     next_state = S_PLAYER_TURN;
                 end
             end
 
             S_PLAYER_TURN: begin
-                if (start_game_pulse) begin
-                    next_state = S_SHOW_SEQ; // Restart mid-round if desired
-                end else if (wrong_input) begin
+                if (wrong_input) begin
                     next_state = S_GAME_OVER;
                 end else if (turn_done) begin
                     next_state = S_SHOW_SEQ;
@@ -57,7 +54,9 @@ module fsmd (
 
             S_GAME_OVER: begin
                 if (start_game_pulse) begin
-                    next_state = S_IDLE; // Return to pregame to reconfigure speed & switches
+                    next_state = S_SHOW_SEQ; // Quick restart
+                end else if (return_to_idle) begin //QUESTION: should we have this separate flag or should we bring in all the inputs?
+                    next_state = S_IDLE; // Change the game configuration
                 end
             end
 
